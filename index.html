@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Spin Circuit — Tabletop Top Racing</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='38%25' cy='32%25'%3E%3Cstop stop-color='%23eaffff'/%3E%3Cstop offset='.4' stop-color='%2336f3ff'/%3E%3Cstop offset='1' stop-color='%23042a36'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23060a12'/%3E%3Cellipse cx='32' cy='44' rx='20' ry='9' fill='%23075a7a'/%3E%3Cellipse cx='32' cy='40' rx='20' ry='9' fill='url(%23g)'/%3E%3Cpath d='M28 38 32 15l4 23z' fill='%239ffcff'/%3E%3Ccircle cx='32' cy='13' r='4' fill='%23fff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="in-menu">
+  <div id="app">
+    <canvas id="game" aria-label="Spin Circuit race track"></canvas>
+    <div id="vignette"></div>
+    <div id="boost-fx"></div>
+    <div id="notice" role="status"></div>
+
+    <!-- ===================== RACE HUD ===================== -->
+    <div id="hud" class="hidden" aria-live="polite">
+      <div class="hud-top">
+        <div class="hud-card lap-card">
+          <span class="hud-label">LAP</span>
+          <span class="hud-value"><b id="lapNow">1</b><i>/3</i></span>
+        </div>
+        <div class="hud-center">
+          <span class="race-mark">SPIN CIRCUIT</span>
+          <span id="timer">00:00.0</span>
+        </div>
+        <div class="hud-card pos-card">
+          <span class="hud-label">POS</span>
+          <span class="hud-value"><b id="posNow">6</b><i id="posOf">/6</i></span>
+        </div>
+      </div>
+
+      <div class="hud-utility">
+        <button id="tiltBtn" class="mini-pill" type="button" aria-pressed="false">
+          <span class="status-dot"></span><span id="tiltLabel">TILT</span>
+        </button>
+        <button id="pauseBtn" class="mini-icon" type="button" aria-label="Pause">Ⅱ</button>
+      </div>
+
+      <div id="minimap-wrap" aria-hidden="true">
+        <canvas id="mini"></canvas>
+      </div>
+
+      <div id="speed-wrap">
+        <span id="speed">0</span><small>KM/H</small>
+        <div class="speed-ticks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <div id="countdown">
+        <div class="count-inner">
+          <span id="countText">3</span>
+          <em id="countSub">GET READY</em>
+        </div>
+      </div>
+
+      <div id="toast" role="status"></div>
+
+      <div id="controls">
+        <button id="leftBtn" class="steer-btn" type="button" aria-label="Steer left">
+          <span class="chev chev-left"></span>
+        </button>
+
+        <div class="boost-column">
+          <div id="boostRing" class="boost-ring">
+            <button id="boostBtn" class="boost-btn" type="button" aria-label="Boost">
+              <span class="boost-bolt">⚡</span>
+              <span class="boost-word">BOOST</span>
+            </button>
+          </div>
+        </div>
+
+        <button id="rightBtn" class="steer-btn" type="button" aria-label="Steer right">
+          <span class="chev chev-right"></span>
+        </button>
+      </div>
+
+      <div class="offtrack-warning" id="offtrackWarning">OFF TRACK</div>
+    </div>
+
+    <!-- ===================== START MENU ===================== -->
+    <section id="menu" class="overlay menu">
+      <div class="menu-wash"></div>
+      <div class="menu-grid">
+        <div class="menu-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> TABLETOP RACING LEAGUE <span class="eyebrow-no">NO. 06</span></div>
+          <h1 class="logo" aria-label="Spin Circuit">
+            <span class="logo-spin">SPIN</span>
+            <span class="logo-circuit">CIRCUIT</span>
+            <span class="logo-slash" aria-hidden="true"></span>
+          </h1>
+          <p class="tagline">Six tops. Three laps. <strong>Zero grip.</strong></p>
+
+          <div class="top-picker" role="radiogroup" aria-label="Choose your top">
+            <button class="top-card selected" type="button" data-top="volt" role="radio" aria-checked="true">
+              <span class="top-chip chip-volt"><i></i></span>
+              <span class="top-name">VOLT</span>
+              <span class="top-role">BALANCED</span>
+              <span class="top-stats"><i style="--v:.78"></i><i style="--v:.82"></i><i style="--v:.76"></i></span>
+            </button>
+            <button class="top-card" type="button" data-top="nova" role="radio" aria-checked="false">
+              <span class="top-chip chip-nova"><i></i></span>
+              <span class="top-name">NOVA</span>
+              <span class="top-role">AGILE</span>
+              <span class="top-stats"><i style="--v:.62"></i><i style="--v:.96"></i><i style="--v:.9"></i></span>
+            </button>
+            <button class="top-card" type="button" data-top="titan" role="radio" aria-checked="false">
+              <span class="top-chip chip-titan"><i></i></span>
+              <span class="top-name">TITAN</span>
+              <span class="top-role">POWER</span>
+              <span class="top-stats"><i style="--v:.98"></i><i style="--v:.54"></i><i style="--v:.66"></i></span>
+            </button>
+          </div>
+
+          <div class="menu-actions">
+            <button id="playBtn" class="play-btn" type="button">PLAY</button>
+            <div class="menu-toggles">
+              <button id="menuTiltBtn" class="toggle-btn" type="button" aria-pressed="false">
+                <span class="toggle-icon">↔</span> TILT <b id="menuTiltState">OFF</b>
+              </button>
+              <button id="soundBtn" class="toggle-btn" type="button" aria-pressed="true">
+                <span class="toggle-icon">♪</span> SOUND <b id="soundState">ON</b>
+              </button>
+            </div>
+          </div>
+
+          <p class="menu-hint">TOUCH PADS TO STEER <span>·</span> HOLD BOOST TO SPIN <span>·</span> TILT OPTIONAL</p>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-halo"></div>
+          <div class="hero-orbit orbit-a"></div>
+          <div class="hero-orbit orbit-b"></div>
+          <div class="hero-top">
+            <div class="hero-disc"></div>
+            <div class="hero-ring"></div>
+            <div class="hero-core"></div>
+            <div class="hero-glint"></div>
+          </div>
+          <div class="hero-shadow"></div>
+          <div class="hero-caption">VOLT <span>//</span> 06</div>
+        </div>
+      </div>
+      <div class="menu-footer">
+        <span>PHONE / TABLET READY</span>
+        <span class="footer-dash"></span>
+        <span>TILT WITH PERMISSION ON iOS</span>
+      </div>
+    </section>
+
+    <!-- ===================== FINISH ===================== -->
+    <section id="finish" class="overlay finish hidden">
+      <div class="result-card">
+        <div class="result-kicker">RACE COMPLETE</div>
+        <h2 id="resultTitle">P2</h2>
+        <p id="resultLine">You spun it. You won it.</p>
+        <div class="result-stats">
+          <div><span>TIME</span><b id="resultTime">00:00.0</b></div>
+          <div><span>BEST LAP</span><b id="resultLap">00:00.0</b></div>
+          <div><span>TOPS BEATEN</span><b id="resultBeaten">4/5</b></div>
+        </div>
+        <div class="result-actions">
+          <button id="againBtn" class="play-btn small" type="button">RACE AGAIN</button>
+          <button id="menuBtn" class="ghost-btn" type="button">GARAGE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PAUSE ===================== -->
+    <section id="pause" class="overlay pause hidden">
+      <div class="pause-card">
+        <div class="result-kicker">PIT STOP</div>
+        <h2>PAUSED</h2>
+        <div class="result-actions column">
+          <button id="resumeBtn" class="play-btn small" type="button">RESUME</button>
+          <button id="restartBtn" class="ghost-btn" type="button">RESTART RACE</button>
+          <button id="quitBtn" class="ghost-btn" type="button">QUIT TO GARAGE</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./game.js"></script>
+</body>
+</html>
